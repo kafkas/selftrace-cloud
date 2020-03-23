@@ -7,6 +7,8 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:prettier/recommended',
+    'plugin:import/errors',
+    'plugin:import/warnings',
   ],
   globals: {
     Atomics: 'readonly',
@@ -17,8 +19,16 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint', 'prettier'],
+  plugins: ['@typescript-eslint', 'prettier', 'import'],
   rules: {
     'no-console': 1,
+    'no-inner-declarations': 0,
+  },
+  settings: {
+    'import/resolver': {
+      node: {
+        extensions: ['.json', '.js', '.jsx', '.ts', '.tsx'],
+      },
+    },
   },
 };
