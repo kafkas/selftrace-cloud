@@ -6,3 +6,6 @@
 typings/
 
 node_modules/
+
+# Eslint config
+!.eslintrc.js

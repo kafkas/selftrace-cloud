@@ -1,0 +1,4 @@
+{
+  "eslint.validate": ["javascript", "typescript"],
+  "eslint.workingDirectories": ["./functions"]
+}
