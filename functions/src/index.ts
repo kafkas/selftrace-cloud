@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as DB from './db';
+import { RegionObject } from './data-types';
 
 /*
  * Users
@@ -57,3 +58,28 @@ exports.processUserUpdate = functions.firestore
       return Promise.reject(err);
     }
   });
+
+/**
+ * An HTTP function that computes and returns to the client the clusters associated with
+ * a specified region, upon the client's request.
+ */
+exports.processClusterRequest = functions.https.onRequest(async (request, response) => {
+  interface ClusterRequestBody {
+    region: RegionObject;
+  }
+
+  if (request.method !== 'POST') {
+    response.status(400).send('This endpoint accepts only POST requests.');
+    return;
+  }
+
+  const { region: regionObj } = request.body as ClusterRequestBody;
+
+  try {
+    const clusters = await DB.computeClustersInRegion(regionObj);
+    response.status(200).send(clusters);
+    return;
+  } catch (err) {
+    response.status(400).send('Could not get clusters.');
+  }
+});
