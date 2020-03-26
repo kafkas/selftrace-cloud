@@ -1,5 +1,6 @@
 import { firestore, auth } from './helpers';
 import { Region, Wellbeing } from '../data-types';
+import MathUtils from '../util/MathUtils';
 
 export const Auth = auth();
 
@@ -45,6 +46,40 @@ export namespace Firestore {
       } catch (err) {
         return Promise.reject(err);
       }
+    }
+    // TODO: Do this properly. Probably will need to introduce Jest.
+    export async function getAllUnwellInRegionMOCK(region: Region) {
+      try {
+        const users = createRandomUsers(25000); // Treat as DB
+        const usersInRegion = users.filter(user => {
+          const { lat, lng } = user.lastLocation!;
+          return region.contains(lat, lng);
+        });
+
+        const results = usersInRegion.map(user => ({
+          data: () => ({ ...user }),
+        }));
+
+        return results;
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    }
+
+    function createRandomUsers(count: number): Doc[] {
+      const users = new Array<Doc>(count);
+      for (let i = 0; i < count; i++) {
+        const wellbeing = Math.random() < 0.5 ? 2 : 4;
+        users[i] = {
+          email: '_',
+          lastLocation: {
+            lat: MathUtils.generateRandomInt(-89, 89),
+            lng: MathUtils.generateRandomInt(-179, 179),
+          },
+          wellbeing,
+        };
+      }
+      return users;
     }
   }
 }
