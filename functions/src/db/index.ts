@@ -47,11 +47,12 @@ export namespace Firestore {
         return Promise.reject(err);
       }
     }
+
+    const mockUsers = createRandomUsers(25000); // Treat as DB
     // TODO: Do this properly. Probably will need to introduce Jest.
     export async function getAllUnwellInRegionMOCK(region: Region) {
       try {
-        const users = createRandomUsers(25000); // Treat as DB
-        const usersInRegion = users.filter(user => {
+        const usersInRegion = mockUsers.filter(user => {
           const { lat, lng } = user.lastLocation!;
           return region.contains(lat, lng);
         });
