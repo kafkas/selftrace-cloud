@@ -70,6 +70,14 @@ exports.processClusterRequest = functions.https.onRequest(async (request, respon
 
   response.set('Access-Control-Allow-Origin', '*');
 
+  if (request.method === 'OPTIONS') {
+    response.set('Access-Control-Allow-Methods', 'GET');
+    response.set('Access-Control-Allow-Headers', 'Content-Type');
+    response.set('Access-Control-Max-Age', '3600');
+    response.status(204).send('');
+    return;
+  }
+
   if (request.method !== 'POST') {
     response.status(400).send('This endpoint accepts only POST requests.');
     return;
