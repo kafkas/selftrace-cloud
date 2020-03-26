@@ -68,6 +68,8 @@ exports.processClusterRequest = functions.https.onRequest(async (request, respon
     region: RegionObject;
   }
 
+  response.set('Access-Control-Allow-Origin', '*');
+
   if (request.method !== 'POST') {
     response.status(400).send('This endpoint accepts only POST requests.');
     return;
