@@ -50,7 +50,7 @@ exports.processUserUpdate = functions.firestore
     try {
       // Update Firebase Auth email so it is consistent with Firestore
       if (userDocBefore.email !== userDocAfter.email) {
-        await DB.Auth.updateUser(uid, { email: userDocAfter.email });
+        await DB.Auth.updateUser(uid, { email: userDocAfter.email, emailVerified: false });
       }
 
       return Promise.resolve();
