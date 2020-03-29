@@ -74,8 +74,8 @@ export namespace Firestore {
         users[i] = {
           email: '_',
           lastLocation: {
-            lat: MathUtils.generateRandomInt(-89, 89),
-            lng: MathUtils.generateRandomInt(-179, 179),
+            lat: MathUtils.generateRandomNumber(-89, 89),
+            lng: MathUtils.generateRandomNumber(-179, 179),
           },
           wellbeing,
         };
