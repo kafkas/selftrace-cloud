@@ -17,7 +17,7 @@ export async function computeClustersInRegion(regionObj: RegionObject): Promise<
   );
 
   try {
-    const unwellUsers = await Firestore.Users.getAllUnwellInRegionMOCK(region);
+    const unwellUsers = await Firestore.Users.getAllUnwellInRegion(region);
 
     // Divide into sub-regions. Consider it a virtual matrix of regions
     const subregions = region.getSubregions(10, 8);
