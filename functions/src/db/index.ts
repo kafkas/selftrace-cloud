@@ -38,7 +38,8 @@ export namespace Firestore {
           .get();
         const unwellUsersInRegion = unwellUsersSnapshot.docs.filter(snap => {
           const userDoc = snap.data() as Doc;
-          const { lat, lng } = userDoc.lastLocation!;
+          if (!userDoc.lastLocation) return false;
+          const { lat, lng } = userDoc.lastLocation;
           return region.contains(lat, lng);
         });
 

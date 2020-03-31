@@ -28,16 +28,18 @@ export async function computeClustersInRegion(regionObj: RegionObject): Promise<
     // Iterate through unwell users and put each one into the correct cluster
     unwellUsers.forEach(snapshot => {
       const data = snapshot.data() as Firestore.Users.Doc;
-      const { lat, lng } = data.lastLocation!;
-      const wellbeing = data.wellbeing!;
 
-      let index = subregions.findIndex(sr => sr.contains(lat, lng));
-      if (index === -1) {
-        index = 0;
+      if (data.lastLocation && data.wellbeing) {
+        const { lat, lng } = data.lastLocation;
+        const { wellbeing } = data;
+
+        let index = subregions.findIndex(sr => sr.contains(lat, lng));
+        if (index === -1) {
+          index = 0;
+        }
+        const cluster = clusters[index];
+        cluster.add(lat, lng, wellbeing);
       }
-
-      const cluster = clusters[index];
-      cluster.add(lat, lng, wellbeing);
     });
 
     const nonEmptyClusters = clusters.filter(cluster => cluster.size() > 0);
