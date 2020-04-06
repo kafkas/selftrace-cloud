@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as DB from './db';
 import { RegionObject } from './data-types';
+import { convertLastLocationsToGeohash } from './migrate';
 
 /*
  * Users
@@ -93,3 +94,12 @@ exports.processClusterRequest = functions.https.onRequest(async (request, respon
     response.status(400).send('Could not get clusters.');
   }
 });
+
+// This function is supposed to be executed only once but I couldn't find
+// a way to schedule a one time task as .schedule() doesn't seem to accept
+// `at` commands. The temporary workaround is to schedule a cron job and
+// delete it from the console after execution.
+exports.migrate = functions.pubsub
+  .schedule('20 16 6 4 1')
+  .timeZone('Europe/Istanbul')
+  .onRun(convertLastLocationsToGeohash);

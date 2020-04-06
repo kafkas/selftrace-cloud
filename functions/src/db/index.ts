@@ -6,12 +6,13 @@ export const Auth = auth();
 
 export namespace Firestore {
   export namespace Users {
-    const usersCollection = () => firestore().collection('users');
+    export const collection = () => firestore().collection('users');
 
-    const userDoc = (uid: string) => usersCollection().doc(uid);
+    const document = (uid: string) => collection().doc(uid);
 
     export interface Doc {
       email: string;
+      geohash?: string;
       lastLocation?: {
         lat: number;
         lng: number;
@@ -19,21 +20,31 @@ export namespace Firestore {
       wellbeing?: number;
     }
 
+    export async function getDoc(uid: string) {
+      try {
+        const doc = await document(uid).get();
+        const data = doc.data();
+        return Promise.resolve(data ? (data as Doc) : undefined);
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    }
+
     export function setDoc(uid: string, doc: Doc) {
-      return userDoc(uid).set(doc);
+      return document(uid).set(doc);
     }
 
     export function updateDoc(uid: string, partialDoc: Partial<Doc>) {
-      return userDoc(uid).update(partialDoc);
+      return document(uid).update(partialDoc);
     }
 
     export function deleteDoc(uid: string) {
-      return userDoc(uid).delete();
+      return document(uid).delete();
     }
 
     export async function getAllUnwellInRegion(region: Region) {
       try {
-        const unwellUsersSnapshot = await usersCollection()
+        const unwellUsersSnapshot = await collection()
           .where('wellbeing', 'in', [Wellbeing.ShowingSymptoms, Wellbeing.TestedPositive])
           .get();
         const unwellUsersInRegion = unwellUsersSnapshot.docs.filter(snap => {
