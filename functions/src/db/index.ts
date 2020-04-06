@@ -1,3 +1,4 @@
+import ngeohash from 'ngeohash';
 import { firestore, auth } from './helpers';
 import { Region, Wellbeing } from '../data-types';
 import MathUtils from '../util/MathUtils';
@@ -60,7 +61,23 @@ export namespace Firestore {
       }
     }
 
+    export async function getAllUnwellInRegionOptimized(region: Region) {
+      try {
+        const minGeohash = ngeohash.encode(region.bottomLat(), region.leftLng());
+        const maxGeohash = ngeohash.encode(region.topLat(), region.rightLng());
+        const unwellUsersSnapshot = await collection()
+          .where('geohash', '>=', minGeohash)
+          .where('geohash', '<=', maxGeohash)
+          .where('wellbeing', 'in', [Wellbeing.ShowingSymptoms, Wellbeing.TestedPositive])
+          .get();
+        return Promise.resolve(unwellUsersSnapshot.docs);
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    }
+
     const mockUsers = createRandomUsers(25000); // Treat as DB
+
     // TODO: Do this properly. Probably will need to introduce Jest.
     export async function getAllUnwellInRegionMOCK(region: Region) {
       try {
