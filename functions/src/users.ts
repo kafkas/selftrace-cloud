@@ -1,4 +1,5 @@
 import * as functions from 'firebase-functions';
+import ngeohash from 'ngeohash';
 import * as DB from './db';
 
 /**
@@ -39,13 +40,31 @@ export const userUpdateHandler = functions.firestore
   .document('users/{userID}')
   .onUpdate(async ({ before, after }) => {
     const uid = after.id;
-    const userDocBefore = before.data() as DB.Firestore.Users.Doc;
-    const userDocAfter = after.data() as DB.Firestore.Users.Doc;
+    const {
+      email: emailPrev,
+      lastLocation: lastLocationPrev,
+    } = before.data() as DB.Firestore.Users.Doc;
+    const {
+      email: emailAfter,
+      lastLocation: lastLocationAfter,
+    } = after.data() as DB.Firestore.Users.Doc;
 
     try {
       // Update Firebase Auth email so it is consistent with Firestore
-      if (userDocBefore.email !== userDocAfter.email) {
-        await DB.Auth.updateUser(uid, { email: userDocAfter.email, emailVerified: false });
+      if (emailPrev !== emailAfter) {
+        await DB.Auth.updateUser(uid, { email: emailAfter, emailVerified: false });
+      }
+
+      const lastLocationDidNotExistButDoesNow = !lastLocationPrev && lastLocationAfter;
+      const lastLocationDidExistButHasChanged =
+        lastLocationPrev &&
+        lastLocationAfter &&
+        (lastLocationPrev.lat !== lastLocationAfter.lat ||
+          lastLocationPrev.lng !== lastLocationAfter.lng);
+
+      if (lastLocationDidNotExistButDoesNow || lastLocationDidExistButHasChanged) {
+        const hashstring = ngeohash.encode(lastLocationAfter!.lat, lastLocationAfter!.lng, 8);
+        await DB.Firestore.Users.updateDoc(uid, { geohash: hashstring });
       }
 
       return Promise.resolve();
