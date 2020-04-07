@@ -1,4 +1,4 @@
-import { clusterRequestHandler, clusterRequestHandlerOptimized } from './clusters';
+import { clusterRequestHandler } from './clusters';
 import { userCreationHandler, userDeletionHandler, userUpdateHandler } from './users';
 import { migrationHandler } from './migrate';
 
@@ -9,7 +9,6 @@ exports.processUserUpdate = userUpdateHandler;
 
 /* Clusters */
 exports.processClusterRequest = clusterRequestHandler;
-exports.processClusterRequestOptimized = clusterRequestHandlerOptimized;
 
 /* Migration */
 exports.migrate = migrationHandler;
