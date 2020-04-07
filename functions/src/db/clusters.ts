@@ -4,9 +4,6 @@ import { Firestore } from '.';
 /**
  * A brute-force algorithm that computes the clusters in a specified region
  * based on the data in users collection.
- *
- * TODO: This needs to be optimized as it is highly inefficient currently.
- * We will probably need to cache the clusters and use geohashing.
  */
 export async function computeClustersInRegion(regionObj: RegionObject): Promise<ClusterObject[]> {
   const region = new Region(
@@ -51,12 +48,12 @@ export async function computeClustersInRegion(regionObj: RegionObject): Promise<
 }
 
 /**
- * An algorithm that computes the clusters in a specified region
- * based on the data in users collection.
+ * An algorithm that computes the clusters in a specified region based on the
+ * data in users collection.
  */
 export async function computeClustersInRegionOptimized(
   regionObj: RegionObject
-): Promise<ClusterObject[]> {
+): Promise<Cluster[]> {
   const region = new Region(
     regionObj.latitude,
     regionObj.longitude,
@@ -67,32 +64,39 @@ export async function computeClustersInRegionOptimized(
   try {
     const unwellUsers = await Firestore.Users.getAllUnwellInRegionOptimized(region);
 
-    // Divide into sub-regions. Consider it a virtual matrix of regions
-    const subregions = region.getSubregions(10, 8);
+    // Divide the region into sub-regions. Consider it a virtual matrix of regions
+    // TODO: Consider increasing these dynamically with zoom level, as users will probably
+    // expect less volatility/jumps at higher zoom levels.
+    const rowCount = 10;
+    const colCount = 8;
 
-    // For each sub-region create a Cluster object
-    const clusters = subregions.map(() => new Cluster());
+    // Create a map where each key is an index, and each value is a Cluster corresponding to a subregion.
+    const clusterMap = new Map<number, Cluster>();
 
-    // Iterate through unwell users and put each one into the correct cluster
+    // Iterate through unwell users and add each one to the correct cluster
     unwellUsers.forEach(snapshot => {
       const data = snapshot.data() as Firestore.Users.Doc;
 
+      // By this point lastLocation and wellbeing should both be defined but we can check for extra safety
       if (data.lastLocation && data.wellbeing) {
-        const { lat, lng } = data.lastLocation;
-        const { wellbeing } = data;
+        const {
+          wellbeing,
+          lastLocation: { lat, lng },
+        } = data;
+        const index = region.getSubregionIndex(lat, lng, rowCount, colCount);
 
-        let index = subregions.findIndex(sr => sr.contains(lat, lng));
-        if (index === -1) {
-          index = 0;
+        // If the geohash query is done right, index should not be -1 here but we can check for extra safety
+        if (index !== -1) {
+          if (!clusterMap.has(index)) {
+            clusterMap.set(index, new Cluster());
+          }
+          const cluster = clusterMap.get(index);
+          cluster!.add(lat, lng, wellbeing);
         }
-        const cluster = clusters[index];
-        cluster.add(lat, lng, wellbeing);
       }
     });
 
-    const nonEmptyClusters = clusters.filter(cluster => cluster.size() > 0);
-
-    return Promise.resolve(nonEmptyClusters);
+    return Array.from(clusterMap.values());
   } catch (err) {
     return Promise.reject(err);
   }

@@ -16,11 +16,11 @@ class Region {
   }
 
   contains(lat: number, lng: number): boolean {
-    if (lat > this.latitude + this.latitudeDelta || lat < this.latitude - this.latitudeDelta) {
+    if (lat > this.topLat() || lat < this.bottomLat()) {
       return false;
     }
 
-    if (lng > this.longitude + this.longitudeDelta || lng < this.longitude - this.longitudeDelta) {
+    if (lng > this.rightLng() || lng < this.leftLng()) {
       return false;
     }
 
@@ -41,6 +41,31 @@ class Region {
 
   rightLng(): number {
     return this.longitude + this.longitudeDelta;
+  }
+
+  /**
+   * Virtually divides the region into `rowCount` rows and `colCount` columns, while the
+   * indices of the resulting subregions start from zero, increasing from left to right
+   * and from top to bottom. Returns the index of the subregion that contains `(lat, lng)`.
+   *
+   * @returns An integer between 0 and `rowCount x colCount - 1` (both inclusive) if
+   * `(lat, lng)` is within this region, -1 otherwise.
+   */
+  getSubregionIndex(lat: number, lng: number, rowCount: number, colCount: number): number {
+    if (!this.contains(lat, lng)) {
+      return -1;
+    }
+
+    const srh = (2 * this.latitudeDelta) / rowCount;
+    const srw = (2 * this.longitudeDelta) / colCount;
+
+    const distanceToTopLat = this.topLat() - lat;
+    const rowIndex = Math.floor(distanceToTopLat / srh);
+
+    const distanceToLeftLng = lng - this.leftLng();
+    const colIndex = Math.floor(distanceToLeftLng / srw);
+
+    return rowIndex * colCount + colIndex;
   }
 
   getSubregions(rowCount: number, colCount: number): Region[] {
