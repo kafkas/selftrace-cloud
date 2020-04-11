@@ -5,6 +5,8 @@ import { Region, Wellbeing } from '../data-types';
 export const Auth = auth();
 
 export namespace Firestore {
+  export const deletionSentinel = () => firestore.FieldValue.delete();
+
   export namespace Users {
     export const collection = () => firestore().collection('users');
 

@@ -61,10 +61,15 @@ export const userUpdateHandler = functions.firestore
         lastLocationAfter &&
         (lastLocationPrev.lat !== lastLocationAfter.lat ||
           lastLocationPrev.lng !== lastLocationAfter.lng);
+      const lastLocationDidExistButHasBeenDeleted = lastLocationPrev && !lastLocationAfter;
 
       if (lastLocationDidNotExistButDoesNow || lastLocationDidExistButHasChanged) {
         const hashstring = ngeohash.encode(lastLocationAfter!.lat, lastLocationAfter!.lng, 8);
         await DB.Firestore.Users.updateDoc(uid, { geohash: hashstring });
+      } else if (lastLocationDidExistButHasBeenDeleted) {
+        await DB.Firestore.Users.updateDoc(uid, {
+          geohash: DB.Firestore.deletionSentinel() as any,
+        });
       }
 
       return Promise.resolve();
